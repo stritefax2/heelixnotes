@@ -1,0 +1,2 @@
+-- This migration can't be reversed as SQLite doesn't support dropping columns directly
+-- For a real reversal, you would need to create a new table without the column and copy data 

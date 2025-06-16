@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Heelix</title>
+    <style>
+      /* Loading spinner styles */
+      #loading-spinner {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #f8f9fa;
+        z-index: 9999;
+        transition: opacity 0.3s ease-out;
+      }
+      
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        border-top: 4px solid #3185fc;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      .hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Loading spinner -->
+    <div id="loading-spinner">
+      <div class="spinner"></div>
+    </div>
+    
+    <div id="root"></div>
+    <script>
+      window.global ||= window;
+      
+      // Hide loading spinner when the app is ready
+      document.addEventListener('DOMContentLoaded', function() {
+        // Wait for React to render
+        const checkReactReady = setInterval(function() {
+          const rootElement = document.getElementById('root');
+          if (rootElement && rootElement.children.length > 0) {
+            const spinner = document.getElementById('loading-spinner');
+            spinner.classList.add('hidden');
+            
+            // Remove the spinner after transition
+            setTimeout(function() {
+              spinner.remove();
+            }, 300);
+            
+            clearInterval(checkReactReady);
+          }
+        }, 100);
+        
+        // Fallback - hide spinner after 5 seconds regardless
+        setTimeout(function() {
+          const spinner = document.getElementById('loading-spinner');
+          if (spinner) {
+            spinner.classList.add('hidden');
+            setTimeout(function() {
+              spinner.remove();
+            }, 300);
+          }
+        }, 5000);
+      });
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

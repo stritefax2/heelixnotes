@@ -1,0 +1,1 @@
+ALTER TABLE projects_activities ADD COLUMN plain_text TEXT; 

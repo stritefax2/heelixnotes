@@ -1,0 +1,1 @@
+-- Add is_vectorized column to projects_activities table

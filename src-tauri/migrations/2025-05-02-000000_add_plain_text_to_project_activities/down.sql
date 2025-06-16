@@ -1,0 +1,1 @@
+ALTER TABLE projects_activities DROP COLUMN plain_text; 

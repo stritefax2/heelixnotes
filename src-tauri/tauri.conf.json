@@ -1,0 +1,92 @@
+{
+  "$schema": "../../node_modules/@tauri-apps/cli/schema.json",
+  "productName": "Heelix",
+  "version": "0.0.1",
+  "identifier": "com.heelixchat.dev",
+  "build": {
+    "beforeBuildCommand": "yarn build",
+    "beforeDevCommand": "yarn start",
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "security": {
+      "csp": null,
+      "capabilities": [
+        {
+          "identifier": "main-capability",
+          "description": "Main application capabilities",
+          "windows": ["main"],
+          "permissions": [
+            "core:event:allow-listen",
+            "core:event:default",
+            "core:window:allow-show",
+            "core:window:allow-hide",
+            "core:window:allow-close",
+            "core:window:allow-set-focus",
+            "core:window:allow-is-visible",
+            "core:app:allow-app-show",
+            "core:app:allow-app-hide",
+            "autostart:allow-enable",
+            "autostart:allow-disable",
+            "autostart:allow-is-enabled",
+            "autostart:default"
+          ]
+        }
+      ]
+    },
+    "windows": [
+      {
+        "label": "main",
+        "url": "index.html",
+        "fullscreen": false,
+        "height": 800,
+        "resizable": true,
+        "title": "Heelix",
+        "width": 1200
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "category": "DeveloperTool",
+    "copyright": "",
+    "externalBin": [],
+    "icon": [
+      "icons/icon_16.png",
+      "icons/icon_32.png",
+      "icons/icon_64.png",
+      "icons/icon_128.png",
+      "icons/icon_256.png",
+      "icons/icon_512.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "longDescription": "",
+    "macOS": {
+      "entitlements": "./macos-entitlements.plist",
+      "exceptionDomain": "",
+      "frameworks": [],
+      "providerShortName": null,
+      "signingIdentity": "-"
+    },
+    "resources": [
+      "resources/*"
+    ],
+    "shortDescription": "",
+    "targets": "all",
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": ""
+    }
+  },
+  "plugins": {
+    "autostart": null,
+    "log": null,
+    "shell": null,
+    "dialog": null,
+    "fs": null,
+    "os": null
+  }
+}
