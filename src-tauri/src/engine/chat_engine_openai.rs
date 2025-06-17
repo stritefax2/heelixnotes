@@ -26,7 +26,7 @@ const MODEL_FAST: &str = "gpt-3.5-turbo";
 const MODEL_CHEAP: &str = "gpt-4";
 const MODEL_MAIN: &str = "gpt-4o";
 const MODEL_REASONING: &str = "o1";
-const MODEL_CHEAP_REASONING: &str = "o3-mini";
+const MODEL_CHEAP_REASONING: &str = "o4-mini";
 
 #[derive(Serialize, Deserialize)]
 pub struct Message {
@@ -51,7 +51,7 @@ pub async fn send_prompt_to_openai(
     let mut window_titles = Vec::new();
     let model_to_use = match model_id.as_deref() {
         Some("o1") => "o1",
-        Some("o3-mini") => "o3-mini",
+        Some("o3-mini") => "o4-mini",
         _ => "gpt-4o", // Default to GPT-4o
     };
 

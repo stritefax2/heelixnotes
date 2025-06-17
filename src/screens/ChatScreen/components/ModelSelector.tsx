@@ -60,8 +60,8 @@ export const ModelSelector: FC<ModelSelectorProps> = ({
       description: "Advanced reasoning"
     },
     {
-      id: "o3-mini",
-      name: "O3-mini",
+      id: "o4-mini",
+      name: "O4-mini",
       provider: "openai",
       description: "Efficient reasoning"
     },
