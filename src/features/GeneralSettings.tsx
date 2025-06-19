@@ -16,6 +16,8 @@ type LocalSettings = {
   apiKeyOpenAi: string;
   apiKeyClaude: string;
   apiKeyGemini: string;
+  localEndpointUrl: string;
+  localModelName: string;
   vectorizationEnabled: boolean;
   darkMode: boolean;
 };
@@ -27,6 +29,8 @@ export const GeneralSettings = () => {
     apiKeyOpenAi: settings.api_key_open_ai,
     apiKeyClaude: settings.api_key_claude,
     apiKeyGemini: settings.api_key_gemini,
+    localEndpointUrl: settings.local_endpoint_url,
+    localModelName: settings.local_model_name,
     vectorizationEnabled: settings.vectorization_enabled,
     darkMode: settings.dark_mode,
   });
@@ -37,6 +41,8 @@ export const GeneralSettings = () => {
       apiKeyOpenAi: settings.api_key_open_ai,
       apiKeyClaude: settings.api_key_claude,
       apiKeyGemini: settings.api_key_gemini,
+      localEndpointUrl: settings.local_endpoint_url,
+      localModelName: settings.local_model_name,
       vectorizationEnabled: settings.vectorization_enabled,
       darkMode: settings.dark_mode,
     });
@@ -99,6 +105,20 @@ export const GeneralSettings = () => {
     }));
   };
 
+  const onChangeLocalEndpointUrl = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalSettings((prevState) => ({
+      ...prevState,
+      localEndpointUrl: event.target.value,
+    }));
+  };
+
+  const onChangeLocalModelName = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalSettings((prevState) => ({
+      ...prevState,
+      localModelName: event.target.value,
+    }));
+  };
+
   const onSave = () => {
     update({
       ...settings,
@@ -106,6 +126,8 @@ export const GeneralSettings = () => {
       api_key_open_ai: localSettings.apiKeyOpenAi,
       api_key_claude: localSettings.apiKeyClaude,
       api_key_gemini: localSettings.apiKeyGemini,
+      local_endpoint_url: localSettings.localEndpointUrl,
+      local_model_name: localSettings.localModelName,
       vectorization_enabled: localSettings.vectorizationEnabled,
       dark_mode: localSettings.darkMode,
     });
@@ -187,6 +209,54 @@ export const GeneralSettings = () => {
               />
             </Flex>
           </Flex>
+          
+          <Box mb={4} p={4} borderRadius="md" bg="var(--card-content-background)" border="1px solid var(--default-border-color)">
+            <Text fontSize="lg" fontWeight="bold" mb={3} color="var(--text-default-color)">
+              Local Model Settings
+            </Text>
+            <Flex alignItems="center" mb={2}>
+              <Flex flex={1}>
+                <Text fontSize="md" mr={4} color="var(--text-default-color)">
+                  Endpoint URL:
+                </Text>
+              </Flex>
+              <Flex flex={2}>
+                <Input
+                  value={localSettings.localEndpointUrl}
+                  onChange={onChangeLocalEndpointUrl}
+                  placeholder="http://localhost:11434"
+                  bg="var(--card-content-background)"
+                  color="var(--text-default-color)"
+                  borderColor="var(--default-border-color)"
+                  _hover={{ borderColor: "var(--active-border-color)" }}
+                  _focus={{ borderColor: "var(--active-border-color)" }}
+                />
+              </Flex>
+            </Flex>
+            <Flex alignItems="center" mb={2}>
+              <Flex flex={1}>
+                <Text fontSize="md" mr={4} color="var(--text-default-color)">
+                  Model Name:
+                </Text>
+              </Flex>
+              <Flex flex={2}>
+                <Input
+                  value={localSettings.localModelName}
+                  onChange={onChangeLocalModelName}
+                  placeholder="llama3.2:latest"
+                  bg="var(--card-content-background)"
+                  color="var(--text-default-color)"
+                  borderColor="var(--default-border-color)"
+                  _hover={{ borderColor: "var(--active-border-color)" }}
+                  _focus={{ borderColor: "var(--active-border-color)" }}
+                />
+              </Flex>
+            </Flex>
+            <Text fontSize="sm" color="var(--text-default-color)" opacity={0.7}>
+              Configure your local model endpoint (e.g., Ollama, llama.cpp, LocalAI). Default is Ollama on localhost:11434.
+            </Text>
+          </Box>
+          
           <Text fontSize="sm" color="var(--text-default-color)" opacity={0.7}>
             API keys are required for their respective models. Add the keys you plan to use.
           </Text>

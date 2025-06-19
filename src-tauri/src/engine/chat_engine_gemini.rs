@@ -14,8 +14,8 @@ use std::time::Duration;
 use tauri::{AppHandle, Manager, Emitter};
 
 // Constants for Gemini model versions
-const GEMINI_URL: &str = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:streamGenerateContent";
-const GEMINI_MODEL: &str = "gemini-2.0-flash";
+const GEMINI_URL: &str = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:streamGenerateContent";
+const GEMINI_MODEL: &str = "gemini-2.5-flash";
 
 #[derive(Serialize, Deserialize)]
 pub struct Message {
@@ -87,8 +87,8 @@ pub async fn send_prompt_to_gemini(
         .map_err(|e| format!("Failed to create client: {}", e))?;
 
     let model_to_use = match model_id.as_deref() {
-        Some("gemini-2.0-flash") => "gemini-2.0-flash",
-        _ => "gemini-2.0-flash", // Default to gemini-2.0-flash
+        Some("gemini-2.5-flash") => "gemini-2.5-flash",
+        _ => "gemini-2.5-flash", // Default to gemini-2.5-flash
     };
     
     let mut filtered_context = String::new();

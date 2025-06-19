@@ -31,6 +31,8 @@ export const DEFAULT_SETTINGS: Settings = {
   api_key_claude: "",
   api_key_open_ai: "",
   api_key_gemini: "",
+  local_endpoint_url: "http://localhost:11434", // Default Ollama endpoint
+  local_model_name: "llama3.2:latest", // Default model
   vectorization_enabled: false,
   dark_mode: false,
 };
@@ -39,7 +41,7 @@ type Update = {
   (settings: Settings): Promise<void>;
 };
 
-type ApiChoice = "claude" | "openai" | "gemini";
+type ApiChoice = "claude" | "openai" | "gemini" | "local";
 export type Settings = {
   is_dev_mode: boolean;
   interval: string;
@@ -48,6 +50,8 @@ export type Settings = {
   api_key_claude: string;
   api_key_open_ai: string;
   api_key_gemini: string;
+  local_endpoint_url: string;
+  local_model_name: string;
   vectorization_enabled: boolean;
   dark_mode: boolean;
 };
@@ -88,6 +92,8 @@ export const SettingsProvider: FC<PropsWithChildren> = ({ children }) => {
       api_key_claude: getSettingOrEmpty(response, "api_key_claude") || "",
       api_key_open_ai: getSettingOrEmpty(response, "api_key_open_ai") || "",
       api_key_gemini: getSettingOrEmpty(response, "api_key_gemini") || "",
+      local_endpoint_url: getSettingOrEmpty(response, "local_endpoint_url") || "http://localhost:11434",
+      local_model_name: getSettingOrEmpty(response, "local_model_name") || "llama3.2:latest",
       vectorization_enabled: getSettingOrEmpty(response, "vectorization_enabled") == "true",
       dark_mode: getSettingOrEmpty(response, "dark_mode") == "true",
     };

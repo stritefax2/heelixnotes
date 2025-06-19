@@ -11,7 +11,7 @@ import {
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import { useGlobalSettings } from "../../../Providers/SettingsProvider";
 
-type ModelProvider = "claude" | "openai" | "gemini";
+type ModelProvider = "claude" | "openai" | "gemini" | "local";
 
 type ModelOption = {
   id: string;
@@ -67,10 +67,23 @@ export const ModelSelector: FC<ModelSelectorProps> = ({
     },
     // Gemini models
     {
-      id: "gemini-2.0-flash",
-      name: "Gemini 2.0 flash",
+      id: "gemini-2.5-flash",
+      name: "Gemini 2.5 flash",
       provider: "gemini",
       description: "Latest Google model"
+    },
+    // Local models
+    {
+      id: "local-llama3.2:latest",
+      name: "Llama 3.2 (Local)",
+      provider: "local",
+      description: "Local Ollama model"
+    },
+    {
+      id: "local-custom",
+      name: "Custom Local Model",
+      provider: "local",
+      description: "Use configured local model"
     }
   ];
 
@@ -87,7 +100,10 @@ export const ModelSelector: FC<ModelSelectorProps> = ({
           defaultModel = "claude-sonnet-4-20250514";
           break;
         case "gemini":
-          defaultModel = "gemini-2.0-flash";
+          defaultModel = "gemini-2.5-flash";
+          break;
+        case "local":
+          defaultModel = "local-custom";
           break;
         case "openai":
         default:

@@ -10,5 +10,7 @@ pub struct Settings {
     pub api_key_claude: String,
     pub api_key_open_ai: String,
     pub api_key_gemini: String,
+    pub local_endpoint_url: String,
+    pub local_model_name: String,
     pub vectorization_enabled: bool,
 }

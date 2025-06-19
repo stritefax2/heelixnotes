@@ -25,6 +25,58 @@ Heelix is an open-source note-taking and chat app built with Rust and Tauri that
 
 📑 File importing 
 
+🤖 **Multi-provider AI support** - Cloud models (Claude, OpenAI, Gemini) and local models (Ollama, llama.cpp, LocalAI)
+
+## Supported AI Models
+
+### 🌩️ Cloud Providers
+| Provider | Models | Features |
+|----------|--------|----------|
+| **Anthropic Claude** | Claude 4 Sonnet, Claude 3.5 Haiku | Advanced reasoning, long context |
+| **OpenAI** | GPT-4o, O1, O4-mini | Industry standard, code generation |
+| **Google Gemini** | Gemini 2.5 Flash | Fast responses, multimodal |
+
+### 🏠 Local Models (Privacy-First)
+| Provider | Description | Setup |
+|----------|-------------|-------|
+| **Ollama** | Easiest local setup | `ollama serve` |
+| **llama.cpp** | High-performance inference | Server mode |
+| **LocalAI** | OpenAI-compatible local API | Docker/native |
+| **Text Generation WebUI** | Popular community choice | Web interface |
+| **LM Studio** | User-friendly model runner | GUI application |
+| **Jan** | Privacy-focused desktop AI | Desktop app |
+
+### 🔥 Recommended Local Models
+- **Llama 3.2 (8B)** - Best balance of quality and speed
+- **Mistral 7B** - Fast and efficient for most tasks  
+- **Code Llama** - Specialized for programming tasks
+- **Phi-3** - Lightweight but capable
+- **Qwen 2.5** - Strong multilingual support
+
+### 🚀 Quick Local Setup
+```bash
+# Install Ollama (recommended)
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# Pull a model
+ollama pull llama3.2:latest
+
+# Start server
+ollama serve
+
+# Configure in Heelix Notes:
+# Settings → General → Local Model Settings
+# Endpoint: http://localhost:11434
+# Model: llama3.2:latest
+```
+
+### 🔒 Privacy Benefits of Local Models
+- ✅ **Complete data privacy** - nothing leaves your device
+- ✅ **No API costs** - unlimited usage
+- ✅ **Offline operation** - works without internet
+- ✅ **GDPR/HIPAA friendly** - sensitive data stays local
+- ✅ **No rate limits** - process as much as you want
+
 ## Requirements
 
 - Install Node 18 (recommended: https://github.com/nvm-sh/nvm, normal install: https://nodejs.org/en/download/package-manager)

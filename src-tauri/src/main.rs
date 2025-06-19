@@ -29,6 +29,7 @@ use crate::configuration::state::{AppState, ServiceAccess};
 use crate::engine::chat_engine::{name_conversation, send_prompt_to_llm};
 use crate::engine::chat_engine_openai::{generate_conversation_name, send_prompt_to_openai};
 use crate::engine::chat_engine_gemini::{name_conversation_gemini, send_prompt_to_gemini};
+use crate::engine::chat_engine_local::{send_prompt_to_local, name_conversation_local};
 use crate::engine::clean_up_engine::clean_up;
 use crate::engine::similarity_search_engine::SyncSimilaritySearch;
 use crate::entity::chat_item::{Chat, StoredMessage};
@@ -177,16 +178,12 @@ async fn main() {
         .plugin(fs_init())
         .plugin(os_init())
         .on_menu_event(|app, event| {
-            println!("Menu event received: {:?}", event.id());
             match event.id().as_ref() {
                 "quit" => {
-                    println!("Quit menu item clicked");
                     cleanup_lock_file();
                     app.exit(0);
                 }
-                _ => {
-                    println!("Unknown menu event: {:?}", event.id());
-                }
+                _ => {}
             }
         })
         .invoke_handler(tauri::generate_handler![
@@ -195,9 +192,11 @@ async fn main() {
             send_prompt_to_llm,
             send_prompt_to_openai,
             send_prompt_to_gemini,
+            send_prompt_to_local,
             generate_conversation_name,
             name_conversation_gemini,
             name_conversation,
+            name_conversation_local,
             create_chat,
             get_all_chats,
             create_message,
@@ -233,20 +232,18 @@ async fn main() {
             db: Default::default(),
         })
         .on_window_event(|window, event| {
-            println!("Window event: {:?} for window: {}", event, window.label());
             match event {
                 tauri::WindowEvent::CloseRequested { api, .. } => {
-                    println!("Close requested for window: {}, preventing close and hiding", window.label());
                     api.prevent_close();
-                    if let Err(e) = window.hide() {
-                        // println!("Error hiding window on close request: {:?}", e);
+                    if let Err(_e) = window.hide() {
+                        // Error hiding window on close request
                     }
                 }
-                tauri::WindowEvent::Focused(focused) => {
-                    println!("Window focus changed: {} for window: {}", focused, window.label());
+                tauri::WindowEvent::Focused(_focused) => {
+                    // Window focus changed
                 }
                 _ => {
-                    println!("Other window event: {:?} for window: {}", event, window.label());
+                    // Other window event
                 }
             }
         })
@@ -257,8 +254,6 @@ async fn main() {
             // Build tray menu
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&quit])?;
-            
-            println!("Created tray menu with quit item");
 
             // Build tray icon with unique ID to prevent duplicates
             let tray_icon = tauri::image::Image::from_path("icons/icon_64.png")
@@ -268,12 +263,9 @@ async fn main() {
                 .menu(&menu)
                 .icon(tray_icon)
                 .on_tray_icon_event(|tray, event| {
-                    // println!("Tray icon event: {:?}", event);
                     match event {
                         TrayIconEvent::Click { button, button_state, .. } => {
-                            // println!("Tray icon clicked with button: {:?}, state: {:?}", button, button_state);
-                            
-                                                         // Only handle the button UP event to avoid double-clicking behavior
+                            // Only handle the button UP event to avoid double-clicking behavior
                              if button == tauri::tray::MouseButton::Left && button_state == tauri::tray::MouseButtonState::Up {
                                  let app = tray.app_handle();
                                  if let Some(window) = app.get_webview_window("main") {
@@ -281,27 +273,23 @@ async fn main() {
                                      let is_minimized = window.is_minimized().unwrap_or(false);
                                      let is_focused = window.is_focused().unwrap_or(false);
                                      
-                                     // println!("Window state - visible: {}, minimized: {}, focused: {}", is_visible, is_minimized, is_focused);
-                                     
                                      // If window is hidden OR minimized OR not focused, show and focus it
                                      if !is_visible || is_minimized || !is_focused {
-                                         // println!("Showing and focusing window");
-                                         
                                          // First, make sure window is visible
-                                         if let Err(e) = window.show() {
-                                             // println!("Error showing window: {:?}", e);
+                                         if let Err(_e) = window.show() {
+                                             // Error showing window
                                          }
                                          
                                          // Unminimize if needed
                                          if is_minimized {
-                                             if let Err(e) = window.unminimize() {
-                                                 // println!("Error unminimizing window: {:?}", e);
+                                             if let Err(_e) = window.unminimize() {
+                                                 // Error unminimizing window
                                              }
                                          }
                                          
                                          // Bring to front and focus
-                                         if let Err(e) = window.set_focus() {
-                                             // println!("Error setting focus: {:?}", e);
+                                         if let Err(_e) = window.set_focus() {
+                                             // Error setting focus
                                          }
                                          
                                          // Temporarily set always on top to ensure it comes to foreground
@@ -311,40 +299,26 @@ async fn main() {
                                          
                                      } else {
                                          // Window is visible, focused, and not minimized - hide it
-                                         // println!("Window is active, hiding it");
-                                         if let Err(e) = window.hide() {
-                                             // println!("Error hiding window: {:?}", e);
+                                         if let Err(_e) = window.hide() {
+                                             // Error hiding window
                                          }
                                      }
-                                 } else {
-                                     // println!("Could not find main window");
                                  }
-                             } else {
-                                 // println!("Ignoring button DOWN event");
                              }
                         }
-                        _ => {
-                            // println!("Other tray event: {:?}", event);
-                        }
+                        _ => {}
                     }
                 })
                 .build(app)?;
-            
-            println!("Successfully created tray icon with ID: heelix-main-tray");
             
             // Store tray reference to ensure proper cleanup
             app.manage(tray);
 
             let window = app.get_webview_window("main").unwrap();
-            println!("Found main window: {:?}", window.label());
-            
-            println!("Should start minimized: {}", should_start_minimized);
 
             if should_start_minimized {
-                println!("Starting minimized - hiding window");
                 window.hide().unwrap();
             } else {
-                println!("Starting normally - showing window");
                 window.show().unwrap();
             }
 
@@ -456,6 +430,24 @@ async fn update_settings(app_handle: AppHandle, settings: Settings) {
         Setting {
             setting_key: String::from("api_key_gemini"),
             setting_value: format!("{}", settings.api_key_gemini),
+        },
+    ).await.unwrap_or(());
+    
+    // Update local_endpoint_url
+    update_setting_async(
+        &app_handle,
+        Setting {
+            setting_key: String::from("local_endpoint_url"),
+            setting_value: format!("{}", settings.local_endpoint_url),
+        },
+    ).await.unwrap_or(());
+    
+    // Update local_model_name
+    update_setting_async(
+        &app_handle,
+        Setting {
+            setting_key: String::from("local_model_name"),
+            setting_value: format!("{}", settings.local_model_name),
         },
     ).await.unwrap_or(());
     
@@ -772,8 +764,6 @@ fn save_audio_file(
     file_path: String,
     audio_data: Vec<u8>,
 ) -> Result<(), String> {
-    println!("Saving audio file to: {}", file_path);
-    
     // Ensure the directory exists
     if let Some(parent) = Path::new(&file_path).parent() {
         std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
@@ -791,8 +781,6 @@ async fn transcribe_audio(
     app_handle: AppHandle,
     file_path: String,
 ) -> Result<String, String> {
-    println!("Transcribing audio file: {}", file_path);
-    
     // Get the OpenAI API key from settings
     let openai_api_key = app_handle
         .db(|db| get_setting(db, "api_key_open_ai"))
@@ -814,17 +802,13 @@ async fn transcribe_audio(
     const CHUNK_SIZE_THRESHOLD: u64 = 20 * 1024 * 1024; 
     
     if file_size > CHUNK_SIZE_THRESHOLD {
-        println!("Large audio file detected ({} bytes), using chunking approach", file_size);
-        
         // Use chunking with OpenAI's Whisper
         let transcription = crate::engine::audio_engine::chunk_and_transcribe_with_openai(&file_path, &openai_api_key).await
             .map_err(|e| e.to_string())?;
         
         // Cleanup the original file
-        if let Err(err) = std::fs::remove_file(&file_path) {
-            println!("Warning: Failed to delete audio file {}: {}", file_path, err);
-        } else {
-            println!("Successfully deleted audio file: {}", file_path);
+        if let Err(_err) = std::fs::remove_file(&file_path) {
+            // Warning: Failed to delete audio file
         }
         
         Ok(transcription)
@@ -837,11 +821,8 @@ async fn transcribe_audio(
         .await
         .map_err(|e| e.to_string())?;
             
-        if let Err(err) = std::fs::remove_file(&file_path) {
-            println!("Warning: Failed to delete audio file {}: {}", file_path, err);
-            // Continue even if deletion fails - we already have the transcription
-        } else {
-            println!("Successfully deleted audio file: {}", file_path);
+        if let Err(_err) = std::fs::remove_file(&file_path) {
+            // Warning: Failed to delete audio file
         }
         
         Ok(transcription)
@@ -884,8 +865,6 @@ fn get_openai_api_key(app_handle: AppHandle) -> Result<serde_json::Value, String
 
 #[tauri::command]
 async fn extract_document_text(file_path: String) -> Result<String, String> {
-    println!("Extracting text from document: {}", file_path);
-    
     // Determine file type based on extension
     let path = Path::new(&file_path);
     let extension = path.extension()
@@ -951,3 +930,4 @@ fn read_text_file(file_path: &str) -> Result<String, String> {
     // Simple text file reading
     std::fs::read_to_string(file_path).map_err(|e| e.to_string())
 }
+

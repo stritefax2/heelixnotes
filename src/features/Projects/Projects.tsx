@@ -1389,7 +1389,7 @@ const ProjectSelector: FC<{
                   
                   {/* Three dots menu in the top-right corner */}
                   {!editingActivityId && (
-                    <Menu placement="bottom-end" isLazy>
+                    <Menu placement="auto" isLazy>
                       <MenuButton
                         as={IconButton}
                         aria-label="Document options"
@@ -1403,7 +1403,7 @@ const ProjectSelector: FC<{
                         top="2"
                         right="2"
                       />
-                      <MenuList minW="150px">
+                      <MenuList minW="150px" zIndex={1000}>
                         <MenuItem
                           icon={<Edit size={14} />}
                           onClick={(e: React.MouseEvent) => {
