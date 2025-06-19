@@ -40,10 +40,13 @@
         "label": "main",
         "url": "index.html",
         "fullscreen": false,
-        "height": 800,
+        "height": 700,
         "resizable": true,
         "title": "Heelix",
-        "width": 1200
+        "width": 1200,
+        "center": true,
+        "minHeight": 500,
+        "minWidth": 800
       }
     ]
   },
