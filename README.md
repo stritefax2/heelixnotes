@@ -12,10 +12,15 @@ We wanted to build an app that makes it lighting fast to create, organize and in
 ## Key Features
 
 **Lightning-fast note creation and organization**
+
 **Project-based knowledge organization**
+
 **Voice memo transcription**
+
 **Local-first storage for complete privacy**
+
 **Built-in vector DB**
+
 **Multi-provider AI support** - Works with Claude, OpenAI, Gemini, and local models
 
 ## Requirements
