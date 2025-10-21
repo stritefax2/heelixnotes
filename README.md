@@ -19,25 +19,11 @@ We wanted to build an app that makes it lighting fast to create, organize and in
 
 🔒 **Local-first storage for complete privacy**
 
-🔍 **Smart knowledge selection** - Easily select relevant knowledge to pass through to the LLM
-
-🗃️ **Built-in vector database** - Efficient document embedding and semantic search
-
-📑 **File importing** - Import and organize your existing documents
+🗃️ **Built-in vector DB**
 
 🤖 **Multi-provider AI support** - Works with Claude, OpenAI, Gemini, and local models
 
 ## Supported AI Models
-
-### Cloud Providers
-| Provider | Models | Features |
-|----------|--------|----------|
-| **Anthropic Claude** | Claude 4.5 Sonnet, Claude 4.5 Haiku | Advanced reasoning, long context |
-| **OpenAI** | GPT-5, GPT-5 Mini, o3, o3-mini | Most advanced, reasoning models |
-| **Google Gemini** | Gemini 2.5 Pro, Gemini 2.5 Flash | Fast responses, multimodal |
-
-### Local Models
-For users who prioritize privacy, Heelix also supports local model providers including Ollama, llama.cpp, LocalAI, and others. Configure your local model endpoint in Settings → General → Local Model Settings
 
 ## Requirements
 
