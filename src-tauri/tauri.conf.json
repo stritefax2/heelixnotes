@@ -30,7 +30,9 @@
             "autostart:allow-enable",
             "autostart:allow-disable",
             "autostart:allow-is-enabled",
-            "autostart:default"
+            "autostart:default",
+            "dialog:allow-open",
+            "dialog:default"
           ]
         }
       ]
@@ -73,9 +75,7 @@
       "providerShortName": null,
       "signingIdentity": "-"
     },
-    "resources": [
-      "resources/*"
-    ],
+    "resources": [],
     "shortDescription": "",
     "targets": "all",
     "windows": {
