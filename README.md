@@ -1,35 +1,27 @@
 # Heelix Notes
 
-Lighting-fast open source desktop app for rapidly creating, organizing, and interacting with your knowledge using LLMs.
+Open source desktop app for taking notes, organizing them into projects, and interacting with your knowledge using LLMs.
 
 # About Heelix
 
-Heelix is an open-source note-taking and chat app built with Rust and Tauri that makes organizing and retrieving knowledge faster and more intuitive. Store notes locally, transcribe voice memos, import files, tag content to projects, and query your data with leading LLMs while maintaining full privacy and control.
+Heelix is an open-source note-taking and chat app built with Rust and Tauri. Store notes locally, transcribe voice memos, import files, tag content to projects, and query your knowledge with leading LLMs while maintaining full privacy and control.
 
 ## Why we built Heelix
 We wanted to build an app that makes it lighting fast to create, organize and interact with your knowledge using LLMs. All while maintaining privacy and full user control.
 
 ## Key Features
 
-🚀 **Lightning-fast note creation and organization**
-
-🧠 **Project-based knowledge organization**
-
-🎙️ **Voice memo transcription**
-
-🔒 **Local-first storage for complete privacy**
-
-🗃️ **Built-in vector DB**
-
-🤖 **Multi-provider AI support** - Works with Claude, OpenAI, Gemini, and local models
-
-## Supported AI Models
+**Lightning-fast note creation and organization**
+**Project-based knowledge organization**
+**Voice memo transcription**
+**Local-first storage for complete privacy**
+**Built-in vector DB**
+**Multi-provider AI support** - Works with Claude, OpenAI, Gemini, and local models
 
 ## Requirements
 
 - Install Node 18 (recommended: https://github.com/nvm-sh/nvm, normal install: https://nodejs.org/en/download/package-manager)
 - Install rust https://www.rust-lang.org/tools/install
-- Install tesseract (optional) https://tesseract-ocr.github.io/tessdoc/Installation.html
 
 ## How to run
 
