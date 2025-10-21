@@ -2,80 +2,42 @@
 
 Lighting-fast open source desktop app for rapidly creating, organizing, and interacting with your knowledge using LLMs.
 
-# About Heelix 
+# About Heelix
 
 Heelix is an open-source note-taking and chat app built with Rust and Tauri that makes organizing and retrieving knowledge faster and more intuitive. Store notes locally, transcribe voice memos, import files, tag content to projects, and query your data with leading LLMs while maintaining full privacy and control.
 
 ## Why we built Heelix
-- We wanted to build an app that makes it lighting fast to create, organize and interact with your knowledge using LLMs. All while maintaining privacy and full user control. 
+We wanted to build an app that makes it lighting fast to create, organize and interact with your knowledge using LLMs. All while maintaining privacy and full user control.
 
-## Key features
+## Key Features
 
-🚀 Lightning-fast note creation and organization
+🚀 **Lightning-fast note creation and organization**
 
-🧠 Project-based knowledge organization
+🧠 **Project-based knowledge organization**
 
-🎙️ Voice memo transcription
+🎙️ **Voice memo transcription**
 
-🔒 Local-first storage for complete privacy
+🔒 **Local-first storage for complete privacy**
 
-🔍 Easily select relevant knowledge to pass through to the LLM using your own API key
+🔍 **Smart knowledge selection** - Easily select relevant knowledge to pass through to the LLM
 
-🗃️ Built-in local vector database for efficient document embedding and semantic search
+🗃️ **Built-in vector database** - Efficient document embedding and semantic search
 
-📑 File importing 
+📑 **File importing** - Import and organize your existing documents
 
-🤖 **Multi-provider AI support** - Cloud models (Claude, OpenAI, Gemini) and local models (Ollama, llama.cpp, LocalAI)
+🤖 **Multi-provider AI support** - Works with Claude, OpenAI, Gemini, and local models
 
 ## Supported AI Models
 
-### 🌩️ Cloud Providers
+### Cloud Providers
 | Provider | Models | Features |
 |----------|--------|----------|
-| **Anthropic Claude** | Claude 4 Sonnet, Claude 3.5 Haiku | Advanced reasoning, long context |
-| **OpenAI** | GPT-4o, O1, O4-mini | Industry standard, code generation |
-| **Google Gemini** | Gemini 2.5 Flash | Fast responses, multimodal |
+| **Anthropic Claude** | Claude 4.5 Sonnet, Claude 4.5 Haiku | Advanced reasoning, long context |
+| **OpenAI** | GPT-5, GPT-5 Mini, o3, o3-mini | Most advanced, reasoning models |
+| **Google Gemini** | Gemini 2.5 Pro, Gemini 2.5 Flash | Fast responses, multimodal |
 
-### 🏠 Local Models (Privacy-First)
-| Provider | Description | Setup |
-|----------|-------------|-------|
-| **Ollama** | Easiest local setup | `ollama serve` |
-| **llama.cpp** | High-performance inference | Server mode |
-| **LocalAI** | OpenAI-compatible local API | Docker/native |
-| **Text Generation WebUI** | Popular community choice | Web interface |
-| **LM Studio** | User-friendly model runner | GUI application |
-| **Jan** | Privacy-focused desktop AI | Desktop app |
-
-### 🔥 Recommended Local Models
-- **Llama 3.2 (8B)** - Best balance of quality and speed
-- **Mistral 7B** - Fast and efficient for most tasks  
-- **Code Llama** - Specialized for programming tasks
-- **Phi-3** - Lightweight but capable
-- **Qwen 2.5** - Strong multilingual support
-
-### 🚀 Quick Local Setup
-```bash
-# Install Ollama (recommended)
-curl -fsSL https://ollama.ai/install.sh | sh
-
-# Pull a model
-ollama pull llama3.2:latest
-
-# Start server
-ollama serve
-
-# Configure in Heelix Notes:
-# Settings → General → Local Model Settings
-# Endpoint: http://localhost:11434
-# Model: llama3.2:latest
-```
-
-### 🔒 Privacy Benefits of Local Models
-- ✅ **Complete data privacy** - nothing leaves your device
-- ✅ **No API costs** - unlimited usage
-- ✅ **Offline operation** - works without internet
-- ✅ **GDPR/HIPAA friendly** - sensitive data stays local
-- ✅ **No rate limits** - process as much as you want
+### Local Models
+For users who prioritize privacy, Heelix also supports local model providers including Ollama, llama.cpp, LocalAI, and others. Configure your local model endpoint in Settings → General → Local Model Settings
 
 ## Requirements
 

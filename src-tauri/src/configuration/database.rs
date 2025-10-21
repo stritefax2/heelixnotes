@@ -23,7 +23,7 @@ pub fn initialize_database(
         .app_data_dir()
         .expect("The app data directory should exist.");
     fs::create_dir_all(&app_dir).expect("The app data directory should be created.");
-    let sqlite_path = app_dir.join("heelixchat.sqlite");
+    let sqlite_path = app_dir.join("heelix_notes.sqlite");
     info!("SQLITE_PATH: {}", sqlite_path.display());
     let db = rusqlite::Connection::open(sqlite_path.clone())?;
     let user_pragma = db.prepare("PRAGMA user_version")?;

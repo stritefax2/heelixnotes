@@ -35,42 +35,36 @@ export const ModelSelector: FC<ModelSelectorProps> = ({
   const modelOptions: ModelOption[] = [
     // Claude models
     {
-      id: "claude-sonnet-4-20250514",
-      name: "Claude 4 Sonnet",
+      id: "claude-sonnet-4-5-20250929",
+      name: "Claude Sonnet 4.5",
       provider: "claude",
-      description: "Main Anthropic model"
+      description: "Latest Anthropic model"
     },
     {
-      id: "claude-3-5-haiku-20241022",
-      name: "Claude 3.5 Haiku",
-      provider: "claude", 
-      description: "Latest Haiku model"
+      id: "claude-haiku-4-5-20251001",
+      name: "Claude Haiku 4.5",
+      provider: "claude",
+      description: "Fast and efficient"
     },
     // OpenAI models
     {
       id: "gpt-4o",
       name: "GPT-4o",
       provider: "openai",
-      description: "Latest OpenAI model"
+      description: "Most capable OpenAI model"
     },
     {
       id: "o1",
-      name: "O1",
+      name: "o1",
       provider: "openai",
       description: "Advanced reasoning"
     },
-    {
-      id: "o4-mini",
-      name: "O4-mini",
-      provider: "openai",
-      description: "Efficient reasoning"
-    },
     // Gemini models
     {
-      id: "gemini-2.5-flash",
-      name: "Gemini 2.5 flash",
+      id: "gemini-2.0-flash-exp",
+      name: "Gemini 2.0 Flash",
       provider: "gemini",
-      description: "Latest Google model"
+      description: "Latest Gemini model"
     },
     // Local models
     {
@@ -97,10 +91,10 @@ export const ModelSelector: FC<ModelSelectorProps> = ({
       
       switch (settings.api_choice) {
         case "claude":
-          defaultModel = "claude-sonnet-4-20250514";
+          defaultModel = "claude-sonnet-4-5-20250929";
           break;
         case "gemini":
-          defaultModel = "gemini-2.5-flash";
+          defaultModel = "gemini-2.0-flash-exp";
           break;
         case "local":
           defaultModel = "local-custom";

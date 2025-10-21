@@ -2,7 +2,7 @@
   "$schema": "../../node_modules/@tauri-apps/cli/schema.json",
   "productName": "Heelix",
   "version": "0.0.1",
-  "identifier": "com.heelixchat.dev",
+  "identifier": "com.heelixnotes.dev",
   "build": {
     "beforeBuildCommand": "yarn build",
     "beforeDevCommand": "yarn start",
