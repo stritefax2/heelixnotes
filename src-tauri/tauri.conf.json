@@ -9,7 +9,7 @@
   },
   "package": {
     "productName": "Heelix",
-    "version": "0.9.5"
+    "version": "0.0.1"
   },
   "tauri": {
     "systemTray": {
