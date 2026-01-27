@@ -402,7 +402,7 @@ const ProjectSelector: FC<{
   const [isProcessingRecording, setIsProcessingRecording] = useState(false);
   const [recordingFilePath, setRecordingFilePath] = useState<string | null>(null);
   const recordingStartTime = useRef<number | null>(null);
-  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const recordingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   const toast = useToast();
   const { settings } = useGlobalSettings();

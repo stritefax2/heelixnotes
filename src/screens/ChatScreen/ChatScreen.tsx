@@ -128,7 +128,7 @@ export const ChatScreen: FC = () => {
   const [lastResetTimestamp, setLastResetTimestamp] = useState("");
   const [isActivityHistoryOpen, setIsActivityHistoryOpen] = useState(false);
   const [selectedActivityTexts, setSelectedActivityTexts] = useState<string[]>([]);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedActivityName, setSelectedActivityName] = useState("");
   const [currentModelId, setCurrentModelId] = useState<string>("");
   const [isEditing, setIsEditing] = useState(false);
