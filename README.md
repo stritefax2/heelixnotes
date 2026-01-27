@@ -11,7 +11,6 @@ Heelix is a desktop app written in Rust and Tauri, letting you to rapidly create
 
 - Install Node 18 (recommended: https://github.com/nvm-sh/nvm, normal install: https://nodejs.org/en/download/package-manager)
 - Install rust https://www.rust-lang.org/tools/install
-- Install tesseract (optional) https://tesseract-ocr.github.io/tessdoc/Installation.html
 
 ## How to run
 

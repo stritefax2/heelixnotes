@@ -26,7 +26,6 @@ tauri = { version = "1.5.2", features = [
     "system-tray",
 ] }
 screenshots = "0.8.10"
-rusty-tesseract = "1.1.10"
 image = "0.25.1"
 imageproc = "0.25.0"
 chrono = "0.4"
