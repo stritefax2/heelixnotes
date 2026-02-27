@@ -31,11 +31,15 @@ import {
   useToast,
   InputGroup,
   InputLeftElement,
-  Divider
-} from '@chakra-ui/react';  
-import { Edit2, Save, X, Bold, Italic, List, Undo, Redo, FolderInput, ChevronDown, Search } from "lucide-react";
+  Divider,
+  Spinner,
+} from '@chakra-ui/react';
+import { Edit2, Save, X, Bold, Italic, List, Undo, Redo, FolderInput, ChevronDown, Search, Sparkles } from "lucide-react";
+import { invoke } from "@tauri-apps/api/tauri";
+import { marked } from "marked";
 import { useProject } from "../../../state";
 import { UNASSIGNED_PROJECT_NAME } from "../../../data/project";
+import { useGlobalSettings } from "../../../Providers/SettingsProvider";
 
 type TipTapEditorProps = {
   content: string;
@@ -60,10 +64,12 @@ export const TipTapEditor: FC<TipTapEditorProps> = React.memo(({
   const [documentTitle, setDocumentTitle] = useState(title);
   const [currentFont, setCurrentFont] = useState('Inter');
   const [projectSearchTerm, setProjectSearchTerm] = useState("");
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
   const toast = useToast();
+  const { settings } = useGlobalSettings();
   
   // Add ref for debouncing editor updates to prevent excessive re-renders
   const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -248,6 +254,75 @@ export const TipTapEditor: FC<TipTapEditorProps> = React.memo(({
     }
   };
 
+  // Determine provider and default model from settings
+  const getProviderAndModel = (): { provider: string; modelId: string } => {
+    switch (settings.api_choice) {
+      case "claude": return { provider: "claude", modelId: "claude-sonnet-4-5" };
+      case "openai": return { provider: "openai", modelId: "gpt-5" };
+      case "gemini": return { provider: "gemini", modelId: "gemini-3-pro-preview" };
+      case "local": return { provider: "local", modelId: "llama3.3:70b" };
+      default: return { provider: "claude", modelId: "claude-sonnet-4-5" };
+    }
+  };
+
+  const handleCleanUpWithAI = async () => {
+    if (!editor) return;
+
+    setIsCleaningUp(true);
+    try {
+      // Fetch the stored plain_text from DB (already cleaned of HTML)
+      const [, plainText] = await invoke<[string, string]>("get_app_project_activity_plain_text", {
+        activityId: documentId,
+      });
+
+      if (!plainText.trim()) {
+        toast({
+          title: "Nothing to clean up",
+          description: "The document is empty. Save some content first.",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+          position: "bottom-right",
+        });
+        return;
+      }
+
+      const { provider, modelId } = getProviderAndModel();
+      const cleanedMarkdown = await invoke<string>("clean_up_document_with_llm", {
+        plainText,
+        provider,
+        modelId,
+      });
+
+      if (cleanedMarkdown) {
+        // Convert markdown to HTML for TipTap
+        const html = await marked(cleanedMarkdown);
+        editor.commands.setContent(html);
+        setHasChanges(true);
+        toast({
+          title: "Document cleaned up",
+          description: "Review the changes and save when ready.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+          position: "bottom-right",
+        });
+      }
+    } catch (error: any) {
+      console.error("Clean up failed:", error);
+      toast({
+        title: "Clean up failed",
+        description: error?.toString() || "An unexpected error occurred.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom-right",
+      });
+    } finally {
+      setIsCleaningUp(false);
+    }
+  };
+
   return (
     <Box width="100%" padding="var(--space-l)">
       <AlertDialog
@@ -319,10 +394,22 @@ export const TipTapEditor: FC<TipTapEditorProps> = React.memo(({
             )}
             
             <Flex alignItems="center" gap={2}>
+              {/* Clean up with AI button */}
+              <Tooltip label="Clean up with AI">
+                <IconButton
+                  aria-label="Clean up with AI"
+                  icon={isCleaningUp ? <Spinner size="xs" /> : <Sparkles size={16} />}
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleCleanUpWithAI}
+                  isDisabled={isCleaningUp}
+                />
+              </Tooltip>
+
               {/* Project assignment/reassignment dropdown - show for all documents */}
-              <Menu 
-                placement="bottom-end" 
-                isLazy 
+              <Menu
+                placement="bottom-end"
+                isLazy
                 onClose={handleMenuClose}
               >
                 <Tooltip label={isUnassignedDocument ? "Assign to project" : `Move to another project (current: ${documentProject?.name})`}>
@@ -491,7 +578,7 @@ export const TipTapEditor: FC<TipTapEditorProps> = React.memo(({
             border="1px"
             borderColor="white" 
             borderRadius="md"
-            bg={isEditing ? 'white' : 'gray.50'}
+            bg="white"
             width="100%"
             sx={{
               ".ProseMirror": {

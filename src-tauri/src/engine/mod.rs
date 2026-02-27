@@ -7,3 +7,4 @@ pub mod chat_engine_local;
 pub mod audio_engine;
 pub mod transcription_engine;
 pub mod project_vector_engine;
+pub mod document_cleanup_engine;
