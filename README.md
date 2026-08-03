@@ -13,9 +13,9 @@ An open-source desktop app for taking notes, transcribing meetings, and chatting
 ## What it does
 
 - **Capture meetings** — auto-detects Zoom and Teams calls; transcribes locally via Whisper or via OpenAI's API
-- **Organize notes and documents** — rich editor with PDF/DOCX/TXT import, project grouping, and AI-assisted polish
-- **Chat with everything you've written** — per-project HNSW vector search, with Claude, OpenAI, Gemini, or any local Ollama model. Answers are grounded in your notes with inline `[n]` citations you can click to jump to the source passage
-- **Generate from any note** — turn a meeting transcript or document into structured meeting notes, a slide deck, or an audio podcast (via ElevenLabs)
+- **Organize notes and documents** — rich editor with PDF/DOCX/TXT import, project grouping, full-text search, and AI-assisted polish
+- **Chat with everything you've written** — per-project HNSW vector search, with Claude, OpenAI, Gemini, or any local Ollama model. Answers are grounded in your notes with inline `[n]` citations you can click to jump to the source passage, and each project greets you with suggested questions generated from its content
+- **Generate from any note** — turn a meeting transcript or document into structured meeting notes with decisions and action items, a follow-up email, a slide deck, or an audio podcast (via ElevenLabs)
 
 Data stays on disk in SQLite. In local transcription mode, audio never leaves your machine.
 

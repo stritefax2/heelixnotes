@@ -148,6 +148,11 @@ export const ChatScreen: FC = () => {
   const [isLoadingActivityText, setIsLoadingActivityText] = useState(false);
   const [currentSources, setCurrentSources] = useState<ChunkSource[]>([]);
   const hasAutoCreatedNote = useRef(false);
+  // NotebookLM-style suggested questions for the empty-chat state, cached per
+  // project so switching back doesn't trigger another LLM call.
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const suggestionsCacheRef = useRef<Map<number, string[]>>(new Map());
   
   // Selected document context for chat (when document from Unassigned is selected)
   const [selectedDocumentContext, setSelectedDocumentContext] = useState<{
@@ -477,6 +482,46 @@ export const ChatScreen: FC = () => {
     }
   }, [state.selectedProject]);
 
+  // Fetch suggested questions for the selected project. Best-effort: any
+  // failure (no API key, empty project, provider down) just leaves the chips
+  // hidden — never surface an error for a background nicety.
+  useEffect(() => {
+    const projectId = state.selectedProject;
+    if (!projectId) {
+      setSuggestedQuestions([]);
+      return;
+    }
+    const cached = suggestionsCacheRef.current.get(projectId);
+    if (cached) {
+      setSuggestedQuestions(cached);
+      return;
+    }
+    let cancelled = false;
+    setSuggestedQuestions([]);
+    setIsLoadingSuggestions(true);
+    // Use the cheap tier where we know one; other providers use their default.
+    const modelId = settings.api_choice === "claude" ? "claude-haiku-4-5" : undefined;
+    invoke<string[]>("generate_suggested_questions", {
+      projectId,
+      provider: settings.api_choice,
+      modelId,
+    })
+      .then((questions) => {
+        if (cancelled) return;
+        suggestionsCacheRef.current.set(projectId, questions);
+        setSuggestedQuestions(questions);
+      })
+      .catch((error) => {
+        console.log("Suggested questions unavailable:", error);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingSuggestions(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [state.selectedProject, settings.api_choice]);
+
   const generateName = async (chatId: number, userInput: string) => {
     try {
       const name = settings.api_choice === "openai"
@@ -507,14 +552,14 @@ export const ChatScreen: FC = () => {
     }
   };
 
-  const getChatId = async (): Promise<number> => {
+  const getChatId = async (messageText?: string): Promise<number> => {
     if (selectedChatId) {
       return selectedChatId;
     }
     try {
       const chatId = await invoke<number>("create_chat", { name: "New Chat" });
       const currentTime = new Date().toISOString();
-      generateName(chatId, userInput);
+      generateName(chatId, messageText ?? userInput);
       setChats([
         {
           id: chatId,
@@ -531,7 +576,8 @@ export const ChatScreen: FC = () => {
     }
   };
 
-  const sendPromptToLlm = async (chatId: number, isFirstMessage: boolean, modelId?: string) => {
+  const sendPromptToLlm = async (chatId: number, isFirstMessage: boolean, modelId?: string, messageText?: string) => {
+    const outgoingText = messageText ?? userInput;
     try {
       const currentDate = new Date();
       const lastResetDate = new Date(lastResetTimestamp);
@@ -553,7 +599,7 @@ export const ChatScreen: FC = () => {
 
       const userMessage = {
         role: "user",
-        content: userInput,
+        content: outgoingText,
       };
 
       const fullConversation = [...conversationHistory, userMessage];
@@ -659,7 +705,7 @@ export const ChatScreen: FC = () => {
       await invoke("create_message", {
         chatId,
         role: "user",
-        content: userInput,
+        content: outgoingText,
         sources: null,
       });
 
@@ -697,8 +743,10 @@ export const ChatScreen: FC = () => {
     }
   };
 
-  const handleSubmit = async (modelId?: string) => {
+  const handleSubmit = async (modelId?: string, textOverride?: string) => {
     const selectedModelId = modelId || currentModelId;
+    const messageText = textOverride ?? userInput;
+    if (!messageText.trim()) return;
     
     // Check API keys based on provider
     const checkApiKeys = (): { valid: boolean; message?: string } => {
@@ -759,7 +807,7 @@ export const ChatScreen: FC = () => {
       if (dialogue.length > 0) {
         chatId = dialogue[dialogue.length - 1].chat_id;
       } else {
-        chatId = await getChatId();
+        chatId = await getChatId(messageText);
       }
       setDialogue((prevDialogue) => [
         ...prevDialogue,
@@ -767,7 +815,7 @@ export const ChatScreen: FC = () => {
           id: Date.now(),
           chat_id: chatId,
           role: "user",
-          content: userInput,
+          content: messageText,
           created_at: new Date().toISOString(),
         },
       ]);
@@ -804,7 +852,7 @@ export const ChatScreen: FC = () => {
         });
       });
 
-      await sendPromptToLlm(chatId, isFirstMessage, selectedModelId);
+      await sendPromptToLlm(chatId, isFirstMessage, selectedModelId, messageText);
       setIsFirstMessage(false);
 
       unlisten();
@@ -1009,7 +1057,13 @@ export const ChatScreen: FC = () => {
 ) : (
           <>
             {dialogue.length === 0 && !isLoadingExistingChat ? (
-              <NewConversationMessage />
+              <NewConversationMessage
+                suggestions={state.selectedProject ? suggestedQuestions : []}
+                isLoadingSuggestions={!!state.selectedProject && isLoadingSuggestions}
+                onSelectSuggestion={(question) => {
+                  if (!isGenerating && !isLoading) handleSubmit(undefined, question);
+                }}
+              />
             ) : (
               <MessagesScrollContainer ref={messageContainerRef}>
                 <MessagesContainer>

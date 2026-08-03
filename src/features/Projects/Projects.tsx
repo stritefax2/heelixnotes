@@ -439,6 +439,33 @@ const ProjectSelector: FC<{
     );
   }, [projects, searchTerm]);
 
+  // Full-text search: debounce the term, then ask the backend which documents
+  // contain it, so the list surfaces content hits alongside name matches.
+  const [contentMatchIds, setContentMatchIds] = useState<Set<number>>(new Set());
+  useEffect(() => {
+    const term = documentSearchTerm.trim();
+    if (term.length < 2) {
+      setContentMatchIds(new Set());
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        const ids = await invoke<number[]>("search_documents_content", {
+          searchTerm: term,
+        });
+        if (!cancelled) setContentMatchIds(new Set(ids));
+      } catch (error) {
+        console.error("Content search failed:", error);
+        if (!cancelled) setContentMatchIds(new Set());
+      }
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [documentSearchTerm]);
+
   // Build filtered + sorted document list (no pagination — render all at once)
   const sortedDocuments = useMemo(() => {
     const allDocs: ActivityDocument[] = selectedProject
@@ -464,12 +491,13 @@ const ProjectSelector: FC<{
     const filtered = documentSearchTerm.trim()
       ? allDocs.filter(doc =>
           doc.name.toLowerCase().includes(documentSearchTerm.toLowerCase()) ||
-          doc.projectName.toLowerCase().includes(documentSearchTerm.toLowerCase())
+          doc.projectName.toLowerCase().includes(documentSearchTerm.toLowerCase()) ||
+          contentMatchIds.has(doc.id)
         )
       : allDocs;
 
     return filtered.sort((a, b) => b.id - a.id);
-  }, [selectedProject, allProjects, documentSearchTerm]);
+  }, [selectedProject, allProjects, documentSearchTerm, contentMatchIds]);
 
   // Start renaming a document
   const handleStartEdit = (activity: { id: number; name: string }) => {
@@ -1266,7 +1294,7 @@ const ProjectSelector: FC<{
               <Search size={16} color="var(--chakra-colors-gray-400)" />
             </InputLeftElement>
             <Input
-              placeholder="Search notes..."
+              placeholder="Search notes & their content..."
               value={documentSearchTerm}
               onChange={(e) => setDocumentSearchTerm(e.target.value)}
               autoComplete="off"

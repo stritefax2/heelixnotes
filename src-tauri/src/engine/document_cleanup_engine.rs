@@ -1,4 +1,5 @@
 use crate::configuration::state::ServiceAccess;
+use crate::repository::project_repository::get_project_document_snippets;
 use crate::repository::settings_repository::get_setting;
 use async_openai::{
     config::OpenAIConfig,
@@ -24,19 +25,57 @@ const CLEANUP_SYSTEM_PROMPT: &str = r##"You are a note cleanup assistant. Clean 
 
 Return ONLY the cleaned markdown. No explanations, no preamble, no wrapping in code fences."##;
 
-const MEETING_SUMMARY_SYSTEM_PROMPT: &str = r##"You are a meeting notes assistant. Transform the following raw text into concise meeting notes in markdown:
+const MEETING_SUMMARY_SYSTEM_PROMPT: &str = r##"You are an expert meeting-notes assistant. The raw text below is typically a meeting transcript, possibly mixed with the user's own rough typed notes. Transform it into polished meeting notes in markdown with these sections:
 
 ## Summary
-A 2-3 sentence overview of what was discussed.
+2-3 sentences: what the meeting was about and its outcome.
 
 ## Key Points
-Bullet list of the important points, topics, and takeaways from the meeting.
+The important points, context, and takeaways — grouped by topic when the discussion had distinct threads.
+
+## Decisions
+Decisions that were actually reached. Omit this section entirely if none were.
+
+## Action Items
+- [ ] Each concrete follow-up as a checkbox item, starting with the owner in **bold** when identifiable, including any deadline mentioned.
+
+Omit this section entirely if there are no action items.
+
+## Open Questions
+Unresolved questions or topics explicitly deferred. Omit this section entirely if none.
 
 Rules:
-- Only use information present in the text — do not add or infer anything
-- Preserve names and specific details mentioned
+- Only use information present in the text — do not add or infer anything beyond it
+- Preserve names, numbers, dates, and specific details exactly as mentioned
+- If the user's own typed notes appear alongside the transcript, treat them as signals of what mattered — make sure those points survive into the notes
 - Keep it concise but comprehensive
 - Return ONLY the markdown. No explanations, no preamble, no code fences."##;
+
+const FOLLOW_UP_EMAIL_SYSTEM_PROMPT: &str = r##"You draft follow-up emails from meeting notes or transcripts.
+
+Write a short, professional but warm follow-up email that:
+- Opens with one sentence of thanks or context for the meeting
+- Recaps key decisions in a short bullet list (omit if none)
+- Lists action items with owners and deadlines where mentioned (omit if none)
+- Closes with the next step
+
+Rules:
+- Use only information present in the source text — do not invent details, names, or dates
+- The first line must be "Subject: <subject line>", then a blank line, then the email body
+- Address it generically ("Hi all,") unless a specific recipient is obvious from the text
+- Keep the body under 250 words
+- Return ONLY the email text. No explanations, no markdown formatting, no code fences."##;
+
+const SUGGESTED_QUESTIONS_SYSTEM_PROMPT: &str = r##"You generate suggested questions for a user exploring their own notes and documents.
+
+Given excerpts from the documents in one project, produce exactly 4 questions the user could ask about this content. Good questions:
+- Are answerable from these documents — never introduce topics that aren't present
+- Are specific: mention actual names, topics, or details from the excerpts
+- Are varied: mix summarizing, synthesis across documents, and detail lookup
+- Are short (under 12 words each) so they fit on a small button
+
+Output ONLY a JSON array of 4 strings. No preamble, no markdown fences.
+Example: ["What did we decide about the Q3 roadmap?", "Who owns the pricing follow-ups?", "Summarize the feedback from the design review", "What risks were raised about the launch?"]"##;
 
 const SLIDES_SYSTEM_PROMPT: &str = r##"You are an expert at turning documents into clear, well-structured slide decks.
 
@@ -171,6 +210,61 @@ pub async fn summarize_as_meeting_notes(
     send_to_llm(&app_handle, &plain_text, &provider, model_id, MEETING_SUMMARY_SYSTEM_PROMPT).await
 }
 
+#[tauri::command]
+pub async fn draft_follow_up_email(
+    app_handle: tauri::AppHandle,
+    plain_text: String,
+    provider: String,
+    model_id: Option<String>,
+) -> Result<String, String> {
+    info!("Drafting follow-up email with provider: {}, model: {:?}", provider, model_id);
+    send_to_llm(&app_handle, &plain_text, &provider, model_id, FOLLOW_UP_EMAIL_SYSTEM_PROMPT).await
+}
+
+/// NotebookLM-style suggested questions for a project, built from leading
+/// snippets of its most recent documents. Returns up to 4 short questions.
+#[tauri::command]
+pub async fn generate_suggested_questions(
+    app_handle: tauri::AppHandle,
+    project_id: i64,
+    provider: String,
+    model_id: Option<String>,
+) -> Result<Vec<String>, String> {
+    const MAX_DOCS: usize = 8;
+    const SNIPPET_CHARS: usize = 600;
+
+    let snippets = app_handle
+        .db(|conn| get_project_document_snippets(conn, project_id, MAX_DOCS, SNIPPET_CHARS))
+        .map_err(|e| format!("Failed to load project documents: {}", e))?;
+
+    if snippets.is_empty() {
+        return Ok(vec![]);
+    }
+
+    let mut prompt = String::from("Document excerpts from the project:\n\n");
+    for (name, snippet) in &snippets {
+        prompt.push_str(&format!("--- {} ---\n{}\n\n", name, snippet.trim()));
+    }
+
+    info!(
+        "Generating suggested questions for project {} from {} docs (provider: {})",
+        project_id,
+        snippets.len(),
+        provider
+    );
+
+    let raw = send_to_llm(&app_handle, &prompt, &provider, model_id, SUGGESTED_QUESTIONS_SYSTEM_PROMPT).await?;
+    let questions: Vec<String> = serde_json::from_str(extract_json_array(&raw)?)
+        .map_err(|e| format!("Failed to parse suggested questions: {}", e))?;
+
+    Ok(questions
+        .into_iter()
+        .map(|q| q.trim().to_string())
+        .filter(|q| !q.is_empty())
+        .take(4)
+        .collect())
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Slide {
     pub title: String,
@@ -246,16 +340,21 @@ Rules:
 - Aim for natural pauses with periods and short sentences. Avoid run-on sentences.
 - End with a one-sentence wrap-up."##;
 
-/// Best-effort JSON extraction: strips optional markdown fences and slices to the
-/// first '[' and last ']' to forgive a stray preamble or trailing comment.
-fn parse_slides(raw: &str) -> Result<Vec<Slide>, String> {
+/// Best-effort JSON array extraction: strips optional markdown fences and slices
+/// to the first '[' and last ']' to forgive a stray preamble or trailing comment.
+fn extract_json_array(raw: &str) -> Result<&str, String> {
     let trimmed = raw.trim();
     let start = trimmed.find('[').ok_or_else(|| "LLM response did not contain a JSON array".to_string())?;
     let end = trimmed.rfind(']').ok_or_else(|| "LLM response did not contain a closing JSON array bracket".to_string())?;
     if end <= start {
         return Err("Malformed JSON in LLM response".to_string());
     }
-    let json_slice = &trimmed[start..=end];
+    Ok(&trimmed[start..=end])
+}
+
+fn parse_slides(raw: &str) -> Result<Vec<Slide>, String> {
+    let trimmed = raw.trim();
+    let json_slice = extract_json_array(raw)?;
 
     serde_json::from_str::<Vec<Slide>>(json_slice)
         .map_err(|e| format!("Failed to parse slide JSON: {}. Raw response began with: {}", e, &trimmed.chars().take(120).collect::<String>()))

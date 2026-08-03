@@ -26,7 +26,7 @@ use crate::engine::chat_engine_openai::{generate_conversation_name, send_prompt_
 use crate::engine::chat_engine_gemini::{name_conversation_gemini, send_prompt_to_gemini};
 use crate::engine::chat_engine_local::{name_conversation_local, send_prompt_to_local};
 use crate::engine::clean_up_engine::clean_up;
-use crate::engine::document_cleanup_engine::{clean_up_document_with_llm, summarize_as_meeting_notes, generate_slides_from_document};
+use crate::engine::document_cleanup_engine::{clean_up_document_with_llm, summarize_as_meeting_notes, generate_slides_from_document, draft_follow_up_email, generate_suggested_questions};
 use crate::engine::podcast_generator::{generate_podcast_from_document, list_elevenlabs_voices};
 use crate::engine::meeting_popup::{meeting_popup_dismiss, meeting_popup_start_recording};
 use crate::engine::url_ingestion::ingest_url_command;
@@ -40,7 +40,7 @@ use crate::repository::chat_db_repository;
 use crate::repository::chunk_repository::{save_chunks_for_document, get_chunk_full_text};
 use crate::repository::permissions_repository::{get_permissions, update_permission};
 use crate::repository::project_repository::{
-    delete_project, fetch_all_projects, add_blank_document, save_project, update_project, get_activity_text_from_project, get_activity_plain_text, get_project_id_for_document, update_activity_text, update_activity_name, delete_project_document, ensure_unassigned_project, move_document_to_project, get_all_documents,
+    delete_project, fetch_all_projects, add_blank_document, save_project, update_project, get_activity_text_from_project, get_activity_plain_text, get_project_id_for_document, update_activity_text, update_activity_name, delete_project_document, ensure_unassigned_project, move_document_to_project, get_all_documents, search_documents_by_content,
 };
 use crate::repository::settings_repository::{get_setting, get_settings, insert_or_update_setting};
 use tauri_plugin_autostart::MacosLauncher;
@@ -179,6 +179,9 @@ async fn main() {
             ingest_url_command,
             clean_up_document_with_llm,
             summarize_as_meeting_notes,
+            draft_follow_up_email,
+            generate_suggested_questions,
+            search_documents_content,
             generate_slides_from_document,
             generate_podcast_from_document,
             list_elevenlabs_voices,
@@ -560,6 +563,22 @@ fn get_all_project_documents(
 ) -> Result<Vec<(i64, String, String, String)>, String> {
     app_handle
         .db(|database| get_all_documents(database))
+        .map_err(|e| e.to_string())
+}
+
+/// Content search over document plain text; returns matching document IDs so
+/// the notes list can include content hits alongside name matches.
+#[tauri::command]
+fn search_documents_content(
+    app_handle: AppHandle,
+    search_term: String,
+) -> Result<Vec<i64>, String> {
+    let term = search_term.trim().to_string();
+    if term.is_empty() {
+        return Ok(vec![]);
+    }
+    app_handle
+        .db(|database| search_documents_by_content(database, &term))
         .map_err(|e| e.to_string())
 }
 

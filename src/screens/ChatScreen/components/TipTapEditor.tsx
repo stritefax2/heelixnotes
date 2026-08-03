@@ -24,8 +24,9 @@ import {
   InputLeftElement,
   Spinner,
 } from '@chakra-ui/react';
-import { Bold, Italic, List, Undo, Redo, FolderInput, Search, Sparkles, Mic, Square, NotebookPen, Presentation, Wand2, Headphones } from "lucide-react";
+import { Bold, Italic, List, Undo, Redo, FolderInput, Search, Sparkles, Mic, Square, NotebookPen, Presentation, Wand2, Headphones, Mail } from "lucide-react";
 import { SlideGeneratorModal } from "./SlideGeneratorModal";
+import { EmailDraftModal } from "./EmailDraftModal";
 import { PodcastGeneratorModal, type PodcastGenerationParams } from "./PodcastGeneratorModal";
 import { PodcastPlayerModal, type PodcastResult } from "./PodcastPlayerModal";
 import { useNotify } from "./notifications";
@@ -55,6 +56,9 @@ export const TipTapEditor: FC<TipTapEditorProps> = React.memo(({
   const [projectSearchTerm, setProjectSearchTerm] = useState("");
   const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const [isDraftingEmail, setIsDraftingEmail] = useState(false);
+  const [emailDraft, setEmailDraft] = useState("");
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   // Slide / podcast generator modal state — both share a fetched plain-text payload
   const [isSlideModalOpen, setIsSlideModalOpen] = useState(false);
   const [isPodcastModalOpen, setIsPodcastModalOpen] = useState(false);
@@ -584,6 +588,53 @@ export const TipTapEditor: FC<TipTapEditorProps> = React.memo(({
     }
   };
 
+  const handleDraftFollowUpEmail = async () => {
+    if (!editor) return;
+
+    setIsDraftingEmail(true);
+    try {
+      const [, plainText] = await invoke<[string, string]>("get_app_project_activity_plain_text", {
+        activityId: documentId,
+      });
+
+      if (!plainText.trim()) {
+        toast({
+          title: "Nothing to draft from",
+          description: "This note is empty. Write something first!",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+          position: "bottom-right",
+        });
+        return;
+      }
+
+      const { provider, modelId } = getProviderAndModel();
+      const email = await invoke<string>("draft_follow_up_email", {
+        plainText,
+        provider,
+        modelId,
+      });
+
+      if (email) {
+        setEmailDraft(email);
+        setIsEmailModalOpen(true);
+      }
+    } catch (error: any) {
+      console.error("Follow-up email draft failed:", error);
+      toast({
+        title: "Couldn't draft the follow-up email",
+        description: error?.toString() || "An unexpected error occurred.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom-right",
+      });
+    } finally {
+      setIsDraftingEmail(false);
+    }
+  };
+
   const openGeneratorModal = async (kind: "slides" | "podcast") => {
     try {
       const [, plainText] = await invoke<[string, string]>("get_app_project_activity_plain_text", {
@@ -731,10 +782,10 @@ export const TipTapEditor: FC<TipTapEditorProps> = React.memo(({
                   <MenuButton
                     as={IconButton}
                     aria-label="Generate from this note"
-                    icon={isSummarizing ? <Spinner size="xs" /> : <Wand2 size={16} />}
+                    icon={isSummarizing || isDraftingEmail ? <Spinner size="xs" /> : <Wand2 size={16} />}
                     size="sm"
                     variant="ghost"
-                    isDisabled={isCleaningUp || isSummarizing || isRecording || isTranscribing}
+                    isDisabled={isCleaningUp || isSummarizing || isDraftingEmail || isRecording || isTranscribing}
                   />
                 </Tooltip>
                 <MenuList minWidth="220px">
@@ -743,6 +794,12 @@ export const TipTapEditor: FC<TipTapEditorProps> = React.memo(({
                     onClick={handleSummarizeAsMeeting}
                   >
                     Meeting notes
+                  </MenuItem>
+                  <MenuItem
+                    icon={<Mail size={14} />}
+                    onClick={handleDraftFollowUpEmail}
+                  >
+                    Follow-up email
                   </MenuItem>
                   <MenuItem
                     icon={<Presentation size={14} />}
@@ -999,6 +1056,11 @@ export const TipTapEditor: FC<TipTapEditorProps> = React.memo(({
             isOpen={isPodcastPlayerOpen}
             onClose={() => setIsPodcastPlayerOpen(false)}
             result={podcastResult}
+          />
+          <EmailDraftModal
+            isOpen={isEmailModalOpen}
+            onClose={() => setIsEmailModalOpen(false)}
+            emailText={emailDraft}
           />
     </Box>
   );

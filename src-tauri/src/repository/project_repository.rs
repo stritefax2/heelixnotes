@@ -281,6 +281,48 @@ pub fn get_all_documents(
     rows.collect()
 }
 
+/// Content search across all documents: returns IDs of documents whose plain
+/// text contains the term. LIKE is case-insensitive for ASCII, which is enough
+/// for a local notes DB at desktop scale — no FTS index needed.
+pub fn search_documents_by_content(
+    conn: &Connection,
+    term: &str,
+) -> Result<Vec<i64>, rusqlite::Error> {
+    let escaped = term
+        .replace('\\', "\\\\")
+        .replace('%', "\\%")
+        .replace('_', "\\_");
+    let pattern = format!("%{}%", escaped);
+    let mut stmt = conn.prepare(
+        "SELECT id FROM projects_activities WHERE plain_text LIKE ?1 ESCAPE '\\'",
+    )?;
+    let rows = stmt.query_map(params![pattern], |row| row.get::<_, i64>(0))?;
+    rows.collect()
+}
+
+/// Name + leading snippet of each non-empty document in a project, newest
+/// first. Used to build LLM prompts (e.g. suggested questions) without loading
+/// entire documents.
+pub fn get_project_document_snippets(
+    conn: &Connection,
+    project_id: i64,
+    max_docs: usize,
+    snippet_chars: usize,
+) -> Result<Vec<(String, String)>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT document_name, substr(plain_text, 1, ?1)
+         FROM projects_activities
+         WHERE project_id = ?2 AND length(trim(plain_text)) > 0
+         ORDER BY id DESC
+         LIMIT ?3",
+    )?;
+    let rows = stmt.query_map(
+        params![snippet_chars as i64, project_id, max_docs as i64],
+        |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)),
+    )?;
+    rows.collect()
+}
+
 pub fn ensure_unassigned_project(conn: &Connection) -> Result<i64, rusqlite::Error> {
     // Check if unassigned project exists
     let mut stmt = conn.prepare("SELECT id FROM projects WHERE name = ?1")?;

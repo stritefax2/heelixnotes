@@ -1,6 +1,6 @@
 use crate::configuration::state::ServiceAccess;
 use crate::engine::similarity_search_engine::DEFAULT_RAG_TOP_K;
-use crate::engine::project_vector_engine::search_project_vectors;
+use crate::engine::project_vector_engine::search_project_vectors_live;
 use crate::engine::rag_prompt::{build_grounded_context, grounded_system_prompt};
 use crate::repository::settings_repository::get_setting;
 use log::{debug, error};
@@ -105,7 +105,7 @@ pub async fn send_prompt_to_gemini(
         if let Some(pid) = project_id {
             debug!("Using per-project vector search for project {}", pid);
 
-            match search_project_vectors(&app_handle, pid, &user_prompt, rag_top_k, &setting_openai.setting_value).await {
+            match search_project_vectors_live(&app_handle, pid, &user_prompt, rag_top_k, &setting_openai.setting_value).await {
                 Ok(similar_chunk_ids) if !similar_chunk_ids.is_empty() => {
                     debug!("Retrieved {} similar chunks from project index", similar_chunk_ids.len());
 
